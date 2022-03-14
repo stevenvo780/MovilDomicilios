@@ -6,7 +6,6 @@ const API_URL = "http://192.168.1.16:3006/api";
 const AuthScreen = (props) => {
 
 	const [email, setEmail] = useState('');
-	const [name, setName] = useState('');
 	const [password, setPassword] = useState('');
 
 	const [isError, setIsError] = useState(false);
@@ -19,7 +18,6 @@ const AuthScreen = (props) => {
 	};
 
 	const onSubmitHandler = () => {
-		console.log(`${API_URL}/auth`);
 		const payload = {
 			email,
 			password,
@@ -31,27 +29,19 @@ const AuthScreen = (props) => {
 			},
 			body: JSON.stringify(payload),
 		})
-			.then(async res => {
-				try {
+			.then(async (res) => {
 					const jsonRes = await res.json();
-					if (res.status !== 200) {
-						setIsError(true);
-						try {
+					try {
 							await AsyncStorage.setItem(
-								'user',
-								JSON.stringify(jsonRes)
-							);
-							props.navigation.navigate('Orders')
-						} catch (error) {
-							console.log("error al guardar" + error);
-						}
-					} else {
-						onLoggedIn(jsonRes.token);
-						setIsError(false);
+							'user',
+							JSON.stringify(jsonRes)
+						);
+						console.log(jsonRes);
+						props.navigation.navigate('Orders')
+					} catch (error) {
+						console.log("error al guardar" + error);
 					}
-				} catch (err) {
-					console.log(err);
-				};
+					setIsError(false);
 			})
 			.catch(err => {
 				console.log("Error login" + err);

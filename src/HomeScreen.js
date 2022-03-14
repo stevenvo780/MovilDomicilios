@@ -6,7 +6,6 @@ export default class HomeScreen extends React.Component {
     return (
       <View >
         <Text>You have (undefined) Orders.</Text>
-
         <Button
           title="Add some orders"
           onPress={() =>
