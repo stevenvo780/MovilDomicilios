@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { ImageBackground, View, Text, StyleSheet, TouchableOpacity, TextInput, AsyncStorage } from 'react-native';
-
-const API_URL = "http://192.168.1.16:3006/api";
+import { ImageBackground, View, Text, StyleSheet, TouchableOpacity, TextInput } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from "@env"
 
 const AuthScreen = (props) => {
 
@@ -30,28 +30,30 @@ const AuthScreen = (props) => {
 			body: JSON.stringify(payload),
 		})
 			.then(async (res) => {
-					const jsonRes = await res.json();
+				const jsonRes = await res.json();
+				if (jsonRes.token) {
 					try {
-							await AsyncStorage.setItem(
+						await AsyncStorage.setItem(
 							'user',
 							JSON.stringify(jsonRes)
 						);
-						console.log(jsonRes);
 						props.navigation.navigate('Orders')
 					} catch (error) {
 						console.log("error al guardar" + error);
 					}
 					setIsError(false);
+				} else {
+					setIsError(true);
+					setMessage('Error en los datos');
+				}
 			})
 			.catch(err => {
 				console.log("Error login" + err);
+				setMessage('Error en los datos');
+				setIsError(true);
 			});
 	};
 
-	const getMessage = () => {
-		const status = isError ? `Error: ` : `Success: `;
-		return status + message;
-	}
 
 	return (
 		<ImageBackground style={styles.image}>
@@ -61,7 +63,7 @@ const AuthScreen = (props) => {
 					<View style={styles.inputs}>
 						<TextInput style={styles.input} placeholder="Email" autoCapitalize="none" onChangeText={setEmail}></TextInput>
 						<TextInput secureTextEntry={true} style={styles.input} placeholder="Password" onChangeText={setPassword}></TextInput>
-						<Text style={[styles.message, { color: isError ? 'red' : 'green' }]}>{message ? getMessage() : null}</Text>
+						<Text style={[styles.message, { color: isError ? 'red' : 'green' }]}>{message}</Text>
 						<TouchableOpacity style={styles.button} onPress={onSubmitHandler}>
 							<Text style={styles.buttonText}>Done</Text>
 						</TouchableOpacity>
@@ -149,6 +151,7 @@ const styles = StyleSheet.create({
 	},
 	message: {
 		fontSize: 16,
+		height: 40,
 		marginVertical: '5%',
 	},
 });

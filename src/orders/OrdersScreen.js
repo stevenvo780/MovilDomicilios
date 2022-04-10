@@ -1,59 +1,50 @@
 import React, { useState, useEffect } from 'react';
-import { SafeAreaView, View, Text, StyleSheet, FlatList, StatusBar, AsyncStorage, Button } from 'react-native';
-
-const API_URL = "http://192.168.1.16:3006/api";
-
-const DATA = [
-	{
-		id: 'bd7acbea-c1b1-46c2-aed5-3ad53abb28ba',
-		title: 'First Item',
-	},
-	{
-		id: '3ac68afc-c605-48d3-a4f8-fbd91aa97f63',
-		title: 'Second Item',
-	},
-	{
-		id: '58694a0f-3da1-471f-bd96-145571e29d72',
-		title: 'Third Item',
-	},
-];
+import { SafeAreaView, View, Text, StyleSheet, FlatList, StatusBar, Button, Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_URL } from "@env"
 
 const Item = (order) => {
-	const accept = (order) => {
-		order.orderStatus = "Salida";
+
+	const acceptOrder = async (order) => {
+		let user = await AsyncStorage.getItem('user');
+		user = JSON.parse(user);
+		let payload = {
+			company: order.company,
+			deliveryNumber: order.deliveryNumber,
+			purchaseNumber: order.purchaseNumber,
+			email: order.email,
+			name: order.name,
+			lastName: order.lastName,
+			documentNumber: order.documentNumber,
+			typeDocument: order.typeDocument,
+			clientPhone: order.clientPhone,
+			deliveryAddress: order.deliveryAddress,
+			city: order.city,
+			neighborhood: order.neighborhood,
+			residentialGroupName: order.residentialGroupName,
+			houseNumberOrApartment: order.houseNumberOrApartment,
+			deliveryNote: order.deliveryNote,
+			deliveryPacket: order.deliveryPacket,
+			orderState: "Salida",
+			domiciliary: order.domiciliary,
+			pickUpAddress: order.pickUpAddress,
+			deliveryHour: order.deliveryHour,
+			deliveryUbication: order.deliveryUbication,
+			deliveryPicture: order.deliveryPicture,
+			urlSheet: order.urlSheet,
+		};
 		fetch(`${API_URL}/order/${order.deliveryNumber}`, {
-			method: 'POST',
+			method: 'PATCH',
+			body: JSON.stringify(payload),
 			headers: {
 				'Content-Type': 'application/json',
 				'Authorization': `Bearer ${user.token}`,
 			},
-			body: JSON.stringify(order),
 		})
-			.then(res => {
+			.then((response) => response.json())
+			.then(response => {
 				try {
-					const jsonRes = res.json();
-					console.log(jsonRes);
-				} catch (err) {
-					console.error(err);
-				};
-			})
-			.catch(err => {
-				console.error("Error login" + err);
-			});
-	}
-	const rejected = (order) => {
-		order.domiciliary = "";
-		fetch(`${API_URL}/order/${order.deliveryNumber}`, {
-			method: 'GET',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${user.token}`,
-			},
-		})
-			.then(res => {
-				try {
-					const jsonRes = res.json();
-					console.log(jsonRes);
+					console.log(response);
 				} catch (err) {
 					console.error(err);
 				};
@@ -73,17 +64,13 @@ const Item = (order) => {
 				<View style={styles.fixToText}>
 					<Button
 						title="Aceptar"
+						onPress={() => acceptOrder(order.order.item)}
 						style={styles.button}
-						onPress={() =>
-							accept(order)
-						}
 					/>
 					<Button
 						title="Recibido"
+						onPress={() => Alert.alert('Simple Button pressed')}
 						style={styles.button}
-						onPress={() =>
-							rejected(order)
-						}
 					/>
 				</View>
 			</View>
@@ -100,7 +87,6 @@ const OrdersScreen = () => {
 		);
 	};
 	const [orders, setOrders] = useState([]);
-	const [user, setUser] = useState();
 	const getOrders = (userJson) => {
 		fetch(`${API_URL}/order/user/domiciliary`, {
 			method: 'GET',
@@ -109,10 +95,10 @@ const OrdersScreen = () => {
 				'Authorization': `Bearer ${userJson.token}`,
 			},
 		})
-			.then(res => {
+			.then((response) => response.json())
+			.then(response => {
 				try {
-					const jsonRes = res.json();
-					setOrders(jsonRes);
+					setOrders(response);
 				} catch (err) {
 					console.error(err);
 				};
@@ -127,7 +113,6 @@ const OrdersScreen = () => {
 			let user = await AsyncStorage.getItem('user');
 			user = JSON.parse(user);
 			if (user !== null) {
-				setUser(user);
 				getOrders(user);
 			}
 		} catch (error) {
