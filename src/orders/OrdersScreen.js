@@ -3,35 +3,12 @@ import { SafeAreaView, View, Text, StyleSheet, FlatList, StatusBar, Button, Aler
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from "@env"
 
-const Item = (order) => {
-
+const WaitItem = (props) => {
 	const acceptOrder = async (order) => {
 		let user = await AsyncStorage.getItem('user');
 		user = JSON.parse(user);
 		let payload = {
-			company: order.company,
-			deliveryNumber: order.deliveryNumber,
-			purchaseNumber: order.purchaseNumber,
-			email: order.email,
-			name: order.name,
-			lastName: order.lastName,
-			documentNumber: order.documentNumber,
-			typeDocument: order.typeDocument,
-			clientPhone: order.clientPhone,
-			deliveryAddress: order.deliveryAddress,
-			city: order.city,
-			neighborhood: order.neighborhood,
-			residentialGroupName: order.residentialGroupName,
-			houseNumberOrApartment: order.houseNumberOrApartment,
-			deliveryNote: order.deliveryNote,
-			deliveryPacket: order.deliveryPacket,
 			orderState: "Salida",
-			domiciliary: order.domiciliary,
-			pickUpAddress: order.pickUpAddress,
-			deliveryHour: order.deliveryHour,
-			deliveryUbication: order.deliveryUbication,
-			deliveryPicture: order.deliveryPicture,
-			urlSheet: order.urlSheet,
 		};
 		fetch(`${API_URL}/order/${order.deliveryNumber}`, {
 			method: 'PATCH',
@@ -44,7 +21,33 @@ const Item = (order) => {
 			.then((response) => response.json())
 			.then(response => {
 				try {
-					console.log(response);
+					props.retrieveData();
+				} catch (err) {
+					console.error(err);
+				};
+			})
+			.catch(err => {
+				console.error("Error login" + err);
+			});
+	}
+	const declineOrder = async (order) => {
+		let user = await AsyncStorage.getItem('user');
+		user = JSON.parse(user);
+		let payload = {
+			domiciliary: "0",
+		};
+		fetch(`${API_URL}/order/${order.deliveryNumber}`, {
+			method: 'PATCH',
+			body: JSON.stringify(payload),
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${user.token}`,
+			},
+		})
+			.then((response) => response.json())
+			.then(response => {
+				try {
+					props.retrieveData();
 				} catch (err) {
 					console.error(err);
 				};
@@ -56,20 +59,20 @@ const Item = (order) => {
 	return (
 		<>
 			<View style={styles.item}>
-				<Text style={styles.title}>{order.order.item.name} {order.order.item.lastName}</Text>
-				<Text style={styles.title}>Celular: {order.order.item.clientPhone}</Text>
-				<Text style={styles.title}>Direccion de recogida {order.order.item.deliveryAddress}</Text>
-				<Text style={styles.title}>{order.order.item.department} - {order.order.item.neighborhood}</Text>
-				<Text style={styles.title}>Conjunto: {order.order.item.residentialGroupName} - {order.order.item.houseNumberOrApartment}</Text>
+				<Text style={styles.title}>{props.order.item.name} {props.order.item.lastName}</Text>
+				<Text style={styles.title}>Celular: {props.order.item.clientPhone}</Text>
+				<Text style={styles.title}>Direccion de recogida {props.order.item.deliveryAddress}</Text>
+				<Text style={styles.title}>{props.order.item.department} - {props.order.item.neighborhood}</Text>
+				<Text style={styles.title}>Conjunto: {props.order.item.residentialGroupName} - {props.order.item.houseNumberOrApartment}</Text>
 				<View style={styles.fixToText}>
 					<Button
 						title="Aceptar"
-						onPress={() => acceptOrder(order.order.item)}
+						onPress={() => acceptOrder(props.order.item)}
 						style={styles.button}
 					/>
 					<Button
 						title="Recibido"
-						onPress={() => Alert.alert('Simple Button pressed')}
+						onPress={() => declineOrder(props.order.item)}
 						style={styles.button}
 					/>
 				</View>
@@ -78,34 +81,36 @@ const Item = (order) => {
 	)
 };
 
+const ExitItem = (props) => {
+	return (
+		<>
+			<View style={styles.item}>
+				<Text style={styles.title}>{props.order.item.name} {props.order.item.lastName}</Text>
+				<Text style={styles.title}>Celular: {props.order.item.clientPhone}</Text>
+				<Text style={styles.title}>Direccion de recogida {props.order.item.deliveryAddress}</Text>
+				<Text style={styles.title}>{props.order.item.department} - {props.order.item.neighborhood}</Text>
+				<Text style={styles.title}>Conjunto: {props.order.item.residentialGroupName} - {props.order.item.houseNumberOrApartment}</Text>
+			</View>
+		</>
+	)
+};
+
 const OrdersScreen = () => {
-	const renderItem = (order) => {
-		return (
-			<Item
-				order={order}
-			/>
-		);
-	};
 	const [orders, setOrders] = useState([]);
-	const getOrders = (userJson) => {
-		fetch(`${API_URL}/order/user/domiciliary`, {
+	const [ordersState, setStateOrders] = useState('wait');
+
+	const getOrders = async (userJson) => {
+		const ordersResponse = await fetch(`${API_URL}/order/user/domiciliary`, {
 			method: 'GET',
 			headers: {
 				'Content-Type': 'application/json',
 				'Authorization': `Bearer ${userJson.token}`,
 			},
 		})
-			.then((response) => response.json())
-			.then(response => {
-				try {
-					setOrders(response);
-				} catch (err) {
-					console.error(err);
-				};
-			})
-			.catch(err => {
-				console.error("Error login" + err);
-			});
+			.then((response) => response.json());
+		if (ordersResponse) {
+			setOrders(ordersResponse);
+		}
 	}
 
 	const retrieveData = async () => {
@@ -122,18 +127,79 @@ const OrdersScreen = () => {
 	useEffect(() => {
 		retrieveData();
 	}, []);
+	const renderItem = (order) => {
+		if (ordersState === "exit") {
+			return (
+				<ExitItem
+					order={order}
+				/>
+			);
+		} else {
+			return (
+				<WaitItem
+					retrieveData={retrieveData}
+					order={order}
+				/>
+			);
+		}
+	};
 	return (
 		<SafeAreaView style={styles.container}>
-			<FlatList
-				data={orders}
-				renderItem={renderItem}
-				keyExtractor={item => item.id}
-			/>
+			<View style={[styles.containerButtons, { paddingLeft: 10, flex: 1 }]}>
+				<View style={[styles.boxButtons]}>
+					<Button
+						title="Actualizar"
+						onPress={(event) => { event.preventDefault(); retrieveData(); setStateOrders(ordersState) }}
+						style={styles.button}
+					/>
+				</View>
+				<View style={[styles.row]}>
+					<View style={[styles.boxButtons]}>
+						<Button
+							title="Espera"
+							onPress={(event) => { event.preventDefault(); setStateOrders("wait") }}
+							style={styles.button}
+						/>
+					</View>
+					<View style={[styles.boxButtons]}>
+						<Button
+							title="Salida"
+							onPress={(event) => { event.preventDefault(); setStateOrders("exit") }}
+							style={styles.button}
+						/>
+					</View>
+				</View>
+				<View style={{ flex: 1 }}>
+					<FlatList
+						data={
+							ordersState === "exit"
+								? orders.filter(order => order.orderState === "Salida")
+								: orders.filter(order => order.orderState === "EsperaSalida")}
+						renderItem={renderItem}
+						keyExtractor={item => item.id}
+					/>
+				</View>
+			</View>
 		</SafeAreaView>
 	);
 };
 
 const styles = StyleSheet.create({
+	containerButtons: {
+		flex: 1,
+
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+	row: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+	},
+	boxButtons: {
+		padding: 5,
+		width: "50%",
+		height: 50,
+	},
 	container: {
 		flex: 1,
 		marginTop: StatusBar.currentHeight || 0,

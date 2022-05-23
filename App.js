@@ -17,41 +17,42 @@ export default function App() {
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
           setErrorMsg('Permission to access location was denied');
-          console.log('Location: ', location);
+          //console.log('Location: ', location);
           return;
         }
         let location = await Location.getCurrentPositionAsync({});
         let user = await AsyncStorage.getItem('user');
         user = JSON.parse(user);
-        let payload = {
-          position: JSON.stringify(location),
-          user: user.id,
-        };
-        fetch(`${API_URL}/positionUser`, {
-          method: 'PATCH',
-          body: JSON.stringify(payload),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${user.token}`,
-          },
-        })
-          .then((response) => response.json())
-          .then(response => {
-            try {
-              console.log(response);
-            } catch (err) {
-              console.error(err);
-            };
+        if (user) {
+          let payload = {
+            position: JSON.stringify(location),
+            user: user.id,
+          };
+          fetch(`${API_URL}/positionUser`, {
+            method: 'PATCH',
+            body: JSON.stringify(payload),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${user.token}`,
+            },
           })
-          .catch(err => {
-            console.error("Error login" + err);
-          });
+            .then((response) => response.json())
+            .then(response => {
+              try {
+                //console.log(response);
+              } catch (err) {
+                console.error(err);
+              };
+            })
+            .catch(err => {
+              console.error("Error login" + err);
+            });
+        }
       })();
     }, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  /*
   useEffect(() => {
     // If the geolocation is not defined in the used browser you can handle it as an error
     if (!navigator.geolocation) {
@@ -59,7 +60,7 @@ export default function App() {
       return;
     }
   }, []);
-  */
+
   return (
     <NavigationContainer>
       <Stack.Navigator>

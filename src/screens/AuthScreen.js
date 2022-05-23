@@ -4,18 +4,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { API_URL } from "@env"
 
 const AuthScreen = (props) => {
-
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 
 	const [isError, setIsError] = useState(false);
 	const [message, setMessage] = useState('');
 	const [isLogin, setIsLogin] = useState(true);
-
-	const onChangeHandler = () => {
-		setIsLogin(!isLogin);
-		setMessage('');
-	};
 
 	const onSubmitHandler = () => {
 		const payload = {
@@ -42,6 +36,8 @@ const AuthScreen = (props) => {
 						console.log("error al guardar" + error);
 					}
 					setIsError(false);
+					setIsLogin(!isLogin);
+					setMessage('');
 				} else {
 					setIsError(true);
 					setMessage('Error en los datos');
@@ -64,10 +60,7 @@ const AuthScreen = (props) => {
 						<TextInput style={styles.input} placeholder="Email" autoCapitalize="none" onChangeText={setEmail}></TextInput>
 						<TextInput secureTextEntry={true} style={styles.input} placeholder="Password" onChangeText={setPassword}></TextInput>
 						<Text style={[styles.message, { color: isError ? 'red' : 'green' }]}>{message}</Text>
-						<TouchableOpacity style={styles.button} onPress={onSubmitHandler}>
-							<Text style={styles.buttonText}>Done</Text>
-						</TouchableOpacity>
-						<TouchableOpacity style={styles.buttonAlt} onPress={onChangeHandler}>
+						<TouchableOpacity style={styles.buttonAlt} onPress={onSubmitHandler}>
 							<Text style={styles.buttonAltText}>Log In</Text>
 						</TouchableOpacity>
 					</View>
