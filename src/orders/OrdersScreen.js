@@ -61,6 +61,7 @@ const WaitItem = (props) => {
 	return (
 		<>
 			<View style={styles.item}>
+				<Text style={styles.title}>Numero de compra: {props.order.item.purchaseNumber}</Text>
 				<Text style={styles.title}>{props.order.item.name} {props.order.item.lastName}</Text>
 				<Text style={styles.title}>Celular: {props.order.item.clientPhone}</Text>
 				<Text style={styles.title}>Direccion de recogida {props.order.item.deliveryAddress}</Text>
@@ -73,7 +74,7 @@ const WaitItem = (props) => {
 						style={styles.button}
 					/>
 					<Button
-						title="Recibido"
+						title="Rechazar"
 						onPress={() => declineOrder(props.order.item)}
 						style={styles.button}
 					/>
@@ -87,6 +88,7 @@ const ExitItem = (props) => {
 	return (
 		<>
 			<View style={styles.item}>
+				<Text style={styles.title}>Numero de compra: {props.order.item.purchaseNumber}</Text>
 				<Text style={styles.title}>{props.order.item.name} {props.order.item.lastName}</Text>
 				<Text style={styles.title}>Celular: {props.order.item.clientPhone}</Text>
 				<Text style={styles.title}>Direccion de recogida {props.order.item.deliveryAddress}</Text>
@@ -172,14 +174,14 @@ const OrdersScreen = (props) => {
 					<View style={[styles.boxButtons]}>
 						<Button
 							title="Espera"
-							onPress={(event) => { event.preventDefault(); setStateOrders("wait") }}
+							onPress={(event) => { event.preventDefault(); retrieveData(); setStateOrders("wait") }}
 							style={styles.button}
 						/>
 					</View>
 					<View style={[styles.boxButtons]}>
 						<Button
 							title="Salida"
-							onPress={(event) => { event.preventDefault(); setStateOrders("exit") }}
+							onPress={(event) => { event.preventDefault(); retrieveData(); setStateOrders("exit") }}
 							style={styles.button}
 						/>
 					</View>
