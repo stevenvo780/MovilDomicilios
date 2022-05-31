@@ -61,7 +61,7 @@ const AuthScreen = (props) => {
 						<TextInput secureTextEntry={true} style={styles.input} placeholder="Password" onChangeText={setPassword}></TextInput>
 						<Text style={[styles.message, { color: isError ? 'red' : 'green' }]}>{message}</Text>
 						<TouchableOpacity style={styles.buttonAlt} onPress={onSubmitHandler}>
-							<Text style={styles.buttonAltText}>Log In</Text>
+							<Text style={styles.buttonAltText}>iniciar sesión</Text>
 						</TouchableOpacity>
 					</View>
 				</View>

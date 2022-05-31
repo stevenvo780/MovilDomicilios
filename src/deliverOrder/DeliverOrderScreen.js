@@ -41,11 +41,6 @@ const DeliverOrderScreen = (props) => {
 		}
 		setMessage('Guardando...');
 		setIsError(false);
-		let idImage = '';
-		for (let index = 0; index < 15; index++) {
-			const numberAleatory = Math.floor(Math.random() * 10);
-			idImage += numberAleatory.toString();
-		}
 		const uploadUri = Platform.OS === "ios" ? imgSource.uri.replace("file://", "") : imgSource.uri;
 		const storageRef = ref(storage, `images/${imgSource.name}`);
 		const blob = await new Promise((resolve, reject) => {
@@ -71,7 +66,6 @@ const DeliverOrderScreen = (props) => {
 					let dateNow = new Date();
 					user = JSON.parse(user);
 					order = JSON.parse(order);
-					console.log(location);
 					let payload = {
 						dealerNote: note,
 						pickupPicture: downloadURL,

@@ -89,7 +89,7 @@ const ExitItem = (props) => {
 			<View style={styles.item}>
 				<Text style={styles.title}>{props.order.item.name} {props.order.item.lastName}</Text>
 				<Text style={styles.title}>Celular: {props.order.item.clientPhone}</Text>
-				<Text style={styles.title}>Direccion de recogida {JSON.parse(props.order.item.deliveryAddress)}</Text>
+				<Text style={styles.title}>Direccion de recogida {props.order.item.deliveryAddress}</Text>
 				<Text style={styles.title}>{props.order.item.department} - {props.order.item.neighborhood}</Text>
 				<Text style={styles.title}>Conjunto: {props.order.item.residentialGroupName} - {props.order.item.houseNumberOrApartment}</Text>
 				<View style={[styles.pickupButtons]}>
