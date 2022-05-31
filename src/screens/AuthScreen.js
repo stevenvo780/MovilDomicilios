@@ -31,7 +31,7 @@ const AuthScreen = (props) => {
 							'user',
 							JSON.stringify(jsonRes)
 						);
-						props.navigation.navigate('Orders')
+						props.navigation.navigate('Orders');
 					} catch (error) {
 						console.log("error al guardar" + error);
 					}

@@ -17,14 +17,16 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.domicilios.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
-      "package": "com.stevenvo780.domicilios"
+      "googleServicesFile": "./google-services.json",
+      "package": "com.domicilios.app"
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, View, Text, StyleSheet, FlatList, StatusBar, Button, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_URL } from "@env"
+import { API_URL } from "@env";
 
 const WaitItem = (props) => {
 	const acceptOrder = async (order) => {
@@ -30,6 +30,7 @@ const WaitItem = (props) => {
 				console.error("Error login" + err);
 			});
 	}
+
 	const declineOrder = async (order) => {
 		let user = await AsyncStorage.getItem('user');
 		user = JSON.parse(user);
@@ -56,6 +57,7 @@ const WaitItem = (props) => {
 				console.error("Error login" + err);
 			});
 	}
+
 	return (
 		<>
 			<View style={styles.item}>
@@ -87,15 +89,27 @@ const ExitItem = (props) => {
 			<View style={styles.item}>
 				<Text style={styles.title}>{props.order.item.name} {props.order.item.lastName}</Text>
 				<Text style={styles.title}>Celular: {props.order.item.clientPhone}</Text>
-				<Text style={styles.title}>Direccion de recogida {props.order.item.deliveryAddress}</Text>
+				<Text style={styles.title}>Direccion de recogida {JSON.parse(props.order.item.deliveryAddress)}</Text>
 				<Text style={styles.title}>{props.order.item.department} - {props.order.item.neighborhood}</Text>
 				<Text style={styles.title}>Conjunto: {props.order.item.residentialGroupName} - {props.order.item.houseNumberOrApartment}</Text>
+				<View style={[styles.pickupButtons]}>
+					<Button
+						title="Entregar"
+						onPress={async (event) => {
+							event.preventDefault();
+							await AsyncStorage.setItem('orderSelected', JSON.stringify(props.order.item));
+							props.navigation.navigate('DeliverOrder');
+						}}
+						style={styles.button}
+					/>
+				</View>
+
 			</View>
 		</>
 	)
 };
 
-const OrdersScreen = () => {
+const OrdersScreen = (props) => {
 	const [orders, setOrders] = useState([]);
 	const [ordersState, setStateOrders] = useState('wait');
 
@@ -132,6 +146,7 @@ const OrdersScreen = () => {
 			return (
 				<ExitItem
 					order={order}
+					navigation={props.navigation}
 				/>
 			);
 		} else {
@@ -145,7 +160,7 @@ const OrdersScreen = () => {
 	};
 	return (
 		<SafeAreaView style={styles.container}>
-			<View style={[styles.containerButtons, { paddingLeft: 10, flex: 1 }]}>
+			<View style={[styles.containerButtons, { paddingLeft: 5, flex: 1 }]}>
 				<View style={[styles.boxButtons]}>
 					<Button
 						title="Actualizar"
@@ -187,13 +202,18 @@ const OrdersScreen = () => {
 const styles = StyleSheet.create({
 	containerButtons: {
 		flex: 1,
-
 		alignItems: 'center',
 		justifyContent: 'center',
 	},
 	row: {
 		flexDirection: "row",
 		flexWrap: "wrap",
+	},
+	pickupButtons: {
+		padding: 5,
+		paddingTop: 10,
+		width: "100%",
+		height: 50,
 	},
 	boxButtons: {
 		padding: 5,
@@ -221,6 +241,7 @@ const styles = StyleSheet.create({
 		fontSize: 32,
 	},
 	button: {
+		position: 'relative',
 		width: 100,
 	},
 });

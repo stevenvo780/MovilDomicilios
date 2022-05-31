@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { StyleSheet, Text, View } from 'react-native';
 import { AuthScreen } from './src/screens';
 import { OrdersScreen } from './src/orders';
+import { DeliverOrderScreen } from './src/deliverOrder';
 import * as Location from 'expo-location';
 import { useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -17,11 +18,11 @@ export default function App() {
         let { status } = await Location.requestForegroundPermissionsAsync();
         if (status !== 'granted') {
           setErrorMsg('Permission to access location was denied');
-          //console.log('Location: ', location);
           return;
         }
         let location = await Location.getCurrentPositionAsync({});
         let user = await AsyncStorage.getItem('user');
+        await AsyncStorage.setItem('location', JSON.stringify(location));
         user = JSON.parse(user);
         if (user) {
           let payload = {
@@ -71,6 +72,10 @@ export default function App() {
         <Stack.Screen
           name="Orders"
           component={OrdersScreen}
+        />
+        <Stack.Screen
+          name="DeliverOrder"
+          component={DeliverOrderScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>
