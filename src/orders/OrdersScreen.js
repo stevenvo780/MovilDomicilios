@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { SafeAreaView, View, Text, StyleSheet, FlatList, StatusBar, Button, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { API_URL } from "@env";
+import { API_URL, WEB_URL } from "@env";
+import openMap from 'react-native-open-maps';
+import { Linking } from "react-native";
+
 
 const WaitItem = (props) => {
 	const acceptOrder = async (order) => {
 		let user = await AsyncStorage.getItem('user');
 		user = JSON.parse(user);
 		let payload = {
-			orderState: "Salida",
+			orderState: "Agree",
 		};
 		fetch(`${API_URL}/order/${order.deliveryNumber}`, {
 			method: 'PATCH',
@@ -84,6 +87,91 @@ const WaitItem = (props) => {
 	)
 };
 
+const AgreeItem = (props) => {
+	const exitOrder = async (order) => {
+		let user = await AsyncStorage.getItem('user');
+		user = JSON.parse(user);
+		let payload = {
+			orderState: "Salida",
+		};
+		fetch(`${API_URL}/order/${order.deliveryNumber}`, {
+			method: 'PATCH',
+			body: JSON.stringify(payload),
+			headers: {
+				'Content-Type': 'application/json',
+				'Authorization': `Bearer ${user.token}`,
+			},
+		})
+			.then((response) => response.json())
+			.then(response => {
+				try {
+					console.log(response);
+					props.retrieveData();
+				} catch (err) {
+					console.error(err);
+				};
+			})
+			.catch(err => {
+				console.error("Error login" + err);
+			});
+	}
+
+
+	return (
+		<>
+			<View style={styles.item}>
+				<Text style={styles.title}>Numero de compra: {props.order.item.purchaseNumber}</Text>
+				<Text style={styles.title}>{props.order.item.name} {props.order.item.lastName}</Text>
+				<Text style={styles.title}>Celular: {props.order.item.clientPhone}</Text>
+				<Text style={styles.title}>Direccion de recogida {props.order.item.deliveryAddress}</Text>
+				<Text style={styles.title}>{props.order.item.department} - {props.order.item.neighborhood}</Text>
+				<Text style={styles.title}>Conjunto: {props.order.item.residentialGroupName} - {props.order.item.houseNumberOrApartment}</Text>
+				<View style={styles.fixToText}>
+					<Button
+						title="Entregar"
+						onPress={() => exitOrder(props.order.item)}
+						style={styles.button}
+					/>
+						<Button
+						title="Ver en el mapa"
+						onPress={async (event) => {
+							event.preventDefault();
+							openMap({ latitud: 6.253762, longitud: -75.574973, query: props.order.item.deliveryAddress, zoom: 15 });
+						}}
+						style={styles.button}
+					/>
+				</View>
+			</View>
+		</>
+	)
+};
+
+const FinishedItem = (props) => {
+	console.log(props.order.item);
+	return (
+		<>
+			<View style={styles.item}>
+				<Text style={styles.title}>Numero de compra: {props.order.item.purchaseNumber}</Text>
+				<Text style={styles.title}>{props.order.item.name} {props.order.item.lastName}</Text>
+				<Text style={styles.title}>Celular: {props.order.item.clientPhone}</Text>
+				<Text style={styles.title}>Direccion de recogida {props.order.item.deliveryAddress}</Text>
+				<Text style={styles.title}>{props.order.item.department} - {props.order.item.neighborhood}</Text>
+				<Text style={styles.title}>Conjunto: {props.order.item.residentialGroupName} - {props.order.item.houseNumberOrApartment}</Text>
+				<View style={styles.fixToText}>
+					<Button
+						title="Ver detalle de talle de la orden"
+						onPress={async (event) => {
+							event.preventDefault();
+							Linking.openURL(`${WEB_URL}/takeOrder/${props.order.item.deliveryNumber}`);
+						}}
+						style={styles.button}
+					/>
+				</View>
+			</View>
+		</>
+	)
+};
+
 const ExitItem = (props) => {
 	return (
 		<>
@@ -94,13 +182,21 @@ const ExitItem = (props) => {
 				<Text style={styles.title}>Direccion de recogida {props.order.item.deliveryAddress}</Text>
 				<Text style={styles.title}>{props.order.item.department} - {props.order.item.neighborhood}</Text>
 				<Text style={styles.title}>Conjunto: {props.order.item.residentialGroupName} - {props.order.item.houseNumberOrApartment}</Text>
-				<View style={[styles.pickupButtons]}>
+				<View style={[styles.fixToText]}>
 					<Button
-						title="Entregar"
+						title="Finalizar"
 						onPress={async (event) => {
 							event.preventDefault();
 							await AsyncStorage.setItem('orderSelected', JSON.stringify(props.order.item));
 							props.navigation.navigate('DeliverOrder');
+						}}
+						style={styles.button}
+					/>
+					<Button
+						title="Ver en el mapa"
+						onPress={async (event) => {
+							event.preventDefault();
+							openMap({ latitud: 6.253762, longitud: -75.574973, query: props.order.item.deliveryAddress, zoom: 15 });
 						}}
 						style={styles.button}
 					/>
@@ -114,6 +210,7 @@ const ExitItem = (props) => {
 const OrdersScreen = (props) => {
 	const [orders, setOrders] = useState([]);
 	const [ordersState, setStateOrders] = useState('wait');
+	const [ordersListByState, setStateListByStateOrders] = useState([]);
 
 	const getOrders = async (userJson) => {
 		const ordersResponse = await fetch(`${API_URL}/order/user/domiciliary`, {
@@ -144,6 +241,7 @@ const OrdersScreen = (props) => {
 		retrieveData();
 	}, []);
 	const renderItem = (order) => {
+
 		if (ordersState === "exit") {
 			return (
 				<ExitItem
@@ -151,9 +249,22 @@ const OrdersScreen = (props) => {
 					navigation={props.navigation}
 				/>
 			);
-		} else {
+		} else if (ordersState === "wait") {
 			return (
 				<WaitItem
+					retrieveData={retrieveData}
+					order={order}
+				/>
+			);
+		} else if (ordersState === "finished") {
+			return (
+				<FinishedItem
+					order={order}
+				/>
+			);
+		} else if (ordersState === "agree") {
+			return (
+				<AgreeItem
 					retrieveData={retrieveData}
 					order={order}
 				/>
@@ -174,24 +285,56 @@ const OrdersScreen = (props) => {
 					<View style={[styles.boxButtons]}>
 						<Button
 							title="Espera"
-							onPress={(event) => { event.preventDefault(); retrieveData(); setStateOrders("wait") }}
+							onPress={(event) => {
+								event.preventDefault();
+								retrieveData();
+								setStateOrders("wait");
+								setStateListByStateOrders(orders.filter((order) => order.orderState === "EsperaSalida"))
+							}}
+							style={styles.button}
+						/>
+					</View>
+					<View style={[styles.boxButtons]}>
+						<Button
+							title="Aceptadas"
+							onPress={(event) => {
+								event.preventDefault();
+								retrieveData();
+								setStateOrders("agree");
+								setStateListByStateOrders(orders.filter((order) => order.orderState === "Agree"))
+							}}
 							style={styles.button}
 						/>
 					</View>
 					<View style={[styles.boxButtons]}>
 						<Button
 							title="Salida"
-							onPress={(event) => { event.preventDefault(); retrieveData(); setStateOrders("exit") }}
+							onPress={(event) => {
+								event.preventDefault();
+								retrieveData();
+								setStateOrders("exit");
+								setStateListByStateOrders(orders.filter((order) => order.orderState === "Salida"))
+							}}
 							style={styles.button}
 						/>
 					</View>
+					<View style={[styles.boxButtons]}>
+						<Button
+							title="Finalizadas"
+							onPress={(event) => {
+								event.preventDefault();
+								retrieveData();
+								setStateOrders("finished");
+								setStateListByStateOrders(orders.filter((order) => order.orderState === "Entregada"))
+							}}
+							style={styles.button}
+						/>
+					</View>
+
 				</View>
 				<View style={{ flex: 1 }}>
 					<FlatList
-						data={
-							ordersState === "exit"
-								? orders.filter(order => order.orderState === "Salida")
-								: orders.filter(order => order.orderState === "EsperaSalida")}
+						data={ordersListByState}
 						renderItem={renderItem}
 						keyExtractor={item => item.id}
 					/>
